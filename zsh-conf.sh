@@ -168,6 +168,15 @@ if [ "$SHELL" != "$(which zsh)" ]; then
     chsh -s "$(which zsh)"
 fi
 
+###############################################################################
+# SET GIT SSH IF IN WSL
+###############################################################################
+
+if [[ -n "${WSL_DISTRO_NAME:-}" ]]; then
+    export GIT_SSH_COMMAND="ssh.exe"
+    alias winssh='ssh.exe'
+fi
+
 echo
 echo "======================================"
 echo "Installation complete"
