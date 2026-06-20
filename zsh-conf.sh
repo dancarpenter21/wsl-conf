@@ -15,7 +15,6 @@ sudo apt install -y \
     unzip \
     build-essential \
     ripgrep \
-    fzf \
     fd-find \
     ca-certificates
 
@@ -81,15 +80,14 @@ sed -i \
     "$HOME/.zshrc"
 
 ###############################################################################
-# FZF CONFIGURATION
+# FZF
 ###############################################################################
 
-grep -q "fzf --zsh" "$HOME/.zshrc" || cat >> "$HOME/.zshrc" <<'EOF'
-
-# fzf keybindings and completion
-eval "$(fzf --zsh)"
-
-EOF
+if [ ! -d "$HOME/.fzf" ]; then
+    echo "=== Installing fzf ==="
+    git clone --depth 1 https://github.com/junegunn/fzf.git "$HOME/.fzf"
+    "$HOME/.fzf/install" --all
+fi
 
 ###############################################################################
 # NVM
