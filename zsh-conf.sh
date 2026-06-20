@@ -43,7 +43,7 @@ if [ ! -d "$P10K_DIR" ]; then
 fi
 
 ###############################################################################
-# PLUGINS
+# ZSH PLUGINS
 ###############################################################################
 
 AUTOSUGGEST_DIR="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-autosuggestions"
@@ -86,19 +86,8 @@ sed -i \
 
 grep -q "fzf --zsh" "$HOME/.zshrc" || cat >> "$HOME/.zshrc" <<'EOF'
 
-# fzf
+# fzf keybindings and completion
 eval "$(fzf --zsh)"
-
-EOF
-
-###############################################################################
-# FD ALIAS
-###############################################################################
-
-grep -q "alias fd=" "$HOME/.zshrc" || cat >> "$HOME/.zshrc" <<'EOF'
-
-# Ubuntu names fd as fdfind
-alias fd='fdfind'
 
 EOF
 
@@ -142,7 +131,7 @@ if ! command -v uv >/dev/null 2>&1; then
 fi
 
 ###############################################################################
-# PATH ADDITIONS
+# SHELL CONFIGURATION
 ###############################################################################
 
 grep -q 'cargo/env' "$HOME/.zshrc" || cat >> "$HOME/.zshrc" <<'EOF'
@@ -157,16 +146,18 @@ export NVM_DIR="$HOME/.nvm"
 # uv
 export PATH="$HOME/.local/bin:$PATH"
 
-EOF
-
-###############################################################################
-# GIT SSH FOR WSL
-###############################################################################
-
-if [[ -n "${WSL_DISTRO_NAME:-}" ]]; then
+# Use Windows OpenSSH agent when running inside WSL
+if [[ -n "${WSL_DISTRO_NAME:-}" ]] && command -v ssh.exe >/dev/null 2>&1; then
     export GIT_SSH_COMMAND="ssh.exe"
-    alias winssh='ssh.exe'
 fi
+
+# Ubuntu installs fd as fdfind
+alias fd='fdfind'
+
+# Local machine-specific overrides
+[[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
+
+EOF
 
 ###############################################################################
 # DEFAULT SHELL
@@ -178,19 +169,33 @@ if [ "$SHELL" != "$(which zsh)" ]; then
 fi
 
 ###############################################################################
-# SET GIT SSH IF IN WSL
+# SUMMARY
 ###############################################################################
-
-if [[ -n "${WSL_DISTRO_NAME:-}" ]]; then
-    export GIT_SSH_COMMAND="ssh.exe"
-    alias winssh='ssh.exe'
-fi
 
 echo
 echo "======================================"
 echo "Installation complete"
 echo "======================================"
 echo
-echo "Restart WSL, then run:"
-echo "  p10k configure"
+echo "Installed:"
+echo "  ✓ zsh"
+echo "  ✓ oh-my-zsh"
+echo "  ✓ powerlevel10k"
+echo "  ✓ zsh-autosuggestions"
+echo "  ✓ zsh-syntax-highlighting"
+echo "  ✓ fzf"
+echo "  ✓ fd-find"
+echo "  ✓ ripgrep"
+echo "  ✓ nvm"
+echo "  ✓ node (LTS)"
+echo "  ✓ rustup"
+echo "  ✓ cargo"
+echo "  ✓ uv"
+echo
+echo "Next steps for WSL:"
+echo "  1. Install a Nerd Font (MesloLGS NF recommended)"
+echo "  2. Configure Windows Terminal to use the Nerd Font"
+echo "  3. Restart WSL"
+echo "Then for WSL or Linux:"
+echo "  1. Run: p10k configure"
 echo
