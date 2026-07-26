@@ -170,7 +170,7 @@ fi
 # TMUX MOUSE
 ###############################################################################
 
-cat >> ~/.tmux.conf << 'EOF'                                                   INT ✘  llm   07:31:56 PM  
+cat >> ~/.tmux.conf << 'EOF'
 set -g mouse on
 EOF
 
