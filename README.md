@@ -4,7 +4,7 @@ Some nice configs for Linux and WSL.
 Don't forget to set:
 ```
 git config --global user.name <name>
-got config --global user.email <email>
+git config --global user.email <email>
 ```
 
 Set fonts in WSL before running.
