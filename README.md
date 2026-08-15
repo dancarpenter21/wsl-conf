@@ -7,9 +7,12 @@ git config --global user.name <name>
 git config --global user.email <email>
 ```
 
-Set fonts in WSL before running.
+The setup script installs MesloLGS Nerd Fonts for the current Linux user. On WSL,
+configure Windows Terminal to use MesloLGS NF after running it.
 
 On WSL use the following to work with KeyPassXC:
 ```
 git config --global core.sshCommand "ssh.exe"
 ```
+
+[NerdFonts source](https://github.com/romkatv/dotfiles-public/tree/ca64c0b2114c86980388c712e92b74ed737e3443/.local/share/fonts/NerdFonts)

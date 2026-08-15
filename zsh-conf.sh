@@ -6,17 +6,51 @@ echo "=== Updating packages ==="
 sudo apt update
 sudo apt upgrade -y
 
+echo "=== Installing font prerequisites ==="
+sudo apt install -y \
+    curl \
+    ca-certificates \
+    fontconfig
+
+###############################################################################
+# NERD FONTS
+###############################################################################
+
+NERD_FONTS_DIR="$HOME/.local/share/fonts/NerdFonts"
+NERD_FONTS_COMMIT="ca64c0b2114c86980388c712e92b74ed737e3443"
+NERD_FONTS_BASE_URL="https://raw.githubusercontent.com/romkatv/dotfiles-public/$NERD_FONTS_COMMIT/.local/share/fonts/NerdFonts"
+NERD_FONTS=(
+    "MesloLGS NF Bold Italic.ttf"
+    "MesloLGS NF Bold.ttf"
+    "MesloLGS NF Italic.ttf"
+    "MesloLGS NF Regular.ttf"
+)
+
+echo "=== Installing Nerd Fonts ==="
+mkdir -p "$NERD_FONTS_DIR"
+
+for font in "${NERD_FONTS[@]}"; do
+    font_path="$NERD_FONTS_DIR/$font"
+
+    if [ ! -f "$font_path" ]; then
+        curl -fL --retry 3 \
+            --output "$font_path.tmp" \
+            "${NERD_FONTS_BASE_URL}/${font// /%20}"
+        mv "$font_path.tmp" "$font_path"
+    fi
+done
+
+fc-cache -f "$NERD_FONTS_DIR"
+
 echo "=== Installing base packages ==="
 sudo apt install -y \
     zsh \
     git \
-    curl \
     wget \
     unzip \
     build-essential \
     ripgrep \
-    fd-find \
-    ca-certificates
+    fd-find
 
 ###############################################################################
 # Git configs
@@ -190,6 +224,7 @@ echo "Installation complete"
 echo "======================================"
 echo
 echo "Installed:"
+echo "  ✓ MesloLGS Nerd Fonts"
 echo "  ✓ zsh"
 echo "  ✓ oh-my-zsh"
 echo "  ✓ powerlevel10k"
@@ -205,9 +240,8 @@ echo "  ✓ cargo"
 echo "  ✓ uv"
 echo
 echo "Next steps for WSL:"
-echo "  1. Install a Nerd Font (MesloLGS NF recommended)"
-echo "  2. Configure Windows Terminal to use the Nerd Font"
-echo "  3. Restart WSL"
+echo "  1. Configure Windows Terminal to use MesloLGS NF"
+echo "  2. Restart WSL"
 echo "Then for WSL or Linux:"
 echo "  1. Run: p10k configure"
 echo
