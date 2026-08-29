@@ -10,6 +10,9 @@ git config --global user.email <email>
 The setup script installs MesloLGS Nerd Fonts for the current Linux user. On WSL,
 configure Windows Terminal to use MesloLGS NF after running it.
 
+The staged zsh, coding-agent, ROCm, and ComfyUI setup is documented in
+[comfy/README.md](comfy/README.md).
+
 On WSL use the following to work with KeyPassXC:
 ```
 git config --global core.sshCommand "ssh.exe"
