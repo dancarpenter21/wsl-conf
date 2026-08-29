@@ -73,6 +73,20 @@ sudo apt install -y \
 git config --global init.defaultBranch main
 
 ###############################################################################
+# DEFAULT SHELL
+###############################################################################
+
+zsh_path="$(command -v zsh)"
+login_shell="$(getent passwd "$(id -un)" | cut -d: -f7)"
+
+if [ "$login_shell" != "$zsh_path" ]; then
+    echo "=== Setting zsh as default shell ==="
+    chsh -s "$zsh_path"
+fi
+
+echo "=== zsh and Powerlevel10k are ready ==="
+
+###############################################################################
 # OH MY ZSH
 ###############################################################################
 
@@ -89,28 +103,6 @@ fi
 touch "$HOME/.tmux.conf"
 grep -qxF 'set -g mouse on' "$HOME/.tmux.conf" || \
     echo 'set -g mouse on' >> "$HOME/.tmux.conf"
-
-###############################################################################
-# HERMES AGENT
-###############################################################################
-
-if ! command -v hermes >/dev/null 2>&1; then
-    echo "=== Installing Hermes Agent (including uv and npm) ==="
-    curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
-else
-    echo "=== Hermes Agent is already installed ==="
-fi
-
-# The Hermes installer links its commands here, but a child installer cannot
-# update this script's environment. Make its bundled tools available now.
-export PATH="$HOME/.local/bin:$PATH"
-
-for hermes_tool in hermes uv npm; do
-    if ! command -v "$hermes_tool" >/dev/null 2>&1; then
-        echo "Hermes installed, but $hermes_tool is not available on PATH." >&2
-        exit 1
-    fi
-done
 
 ###############################################################################
 # POWERLEVEL10K
@@ -178,20 +170,6 @@ if ! grep -Eq '^[[:space:]]*(source|\.)[[:space:]]+.*oh-my-zsh\.sh' "$HOME/.zshr
 fi
 
 ###############################################################################
-# DEFAULT SHELL
-###############################################################################
-
-zsh_path="$(command -v zsh)"
-login_shell="$(getent passwd "$(id -un)" | cut -d: -f7)"
-
-if [ "$login_shell" != "$zsh_path" ]; then
-    echo "=== Setting zsh as default shell ==="
-    chsh -s "$zsh_path"
-fi
-
-echo "=== zsh and Powerlevel10k are ready ==="
-
-###############################################################################
 # CODING AGENTS
 ###############################################################################
 
@@ -237,6 +215,28 @@ if [ ! -d "$HOME/.fzf" ]; then
     git clone --depth 1 https://github.com/junegunn/fzf.git "$HOME/.fzf"
     "$HOME/.fzf/install" --all
 fi
+
+###############################################################################
+# HERMES AGENT
+###############################################################################
+
+if ! command -v hermes >/dev/null 2>&1; then
+    echo "=== Installing Hermes Agent (including uv and npm) ==="
+    curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
+else
+    echo "=== Hermes Agent is already installed ==="
+fi
+
+# The Hermes installer links its commands here, but a child installer cannot
+# update this script's environment. Make its bundled tools available now.
+export PATH="$HOME/.local/bin:$PATH"
+
+for hermes_tool in hermes uv npm; do
+    if ! command -v "$hermes_tool" >/dev/null 2>&1; then
+        echo "Hermes installed, but $hermes_tool is not available on PATH." >&2
+        exit 1
+    fi
+done
 
 ###############################################################################
 # SHELL CONFIGURATION
