@@ -31,9 +31,9 @@ Installs OpenAI Codex, Grok Build, and Hermes Agent. It adds these directories
 to `~/.zshrc` and to the installer process:
 
 ```text
+~/.local/bin        Codex and Hermes command launchers
 ~/.hermes/bin       Hermes-managed uv
 ~/.hermes/node/bin  Hermes-managed Node and npm
-~/.local/bin        Codex and Hermes command launchers
 ```
 
 If Hermes setup was skipped, run `hermes setup --quick` interactively.
@@ -66,4 +66,3 @@ The legacy base-only entry point remains available:
 ```sh
 bash zsh-conf.sh
 ```
-

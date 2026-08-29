@@ -19,23 +19,32 @@ if [ ! -f "$HOME/.zshrc" ]; then
     exit 1
 fi
 
-# Codex installs in ~/.local/bin. Hermes installs its managed uv and Node/npm
-# toolchains under ~/.hermes. Configure zsh directly so installers do not infer
-# .bashrc from the Bash process running this script.
-if ! grep -Fq '$HOME/.hermes/bin:$HOME/.hermes/node/bin:$HOME/.local/bin' "$HOME/.zshrc"; then
+# Codex installs its launcher in ~/.local/bin. Hermes installs its managed uv
+# and Node/npm toolchains under ~/.hermes. Configure zsh directly rather than
+# sourcing .zshrc here: .zshrc is interactive configuration and this is Bash.
+AGENTS_PATH='$HOME/.local/bin:$HOME/.hermes/bin:$HOME/.hermes/node/bin'
+if ! grep -Fq "$AGENTS_PATH" "$HOME/.zshrc"; then
     cat >> "$HOME/.zshrc" <<'EOF'
 
 # comfy coding agents (Codex and Hermes-managed uv/Node/npm)
-export PATH="$HOME/.hermes/bin:$HOME/.hermes/node/bin:$HOME/.local/bin:$PATH"
+export PATH="$HOME/.local/bin:$HOME/.hermes/bin:$HOME/.hermes/node/bin:$PATH"
 EOF
 fi
-export PATH="$HOME/.hermes/bin:$HOME/.hermes/node/bin:$HOME/.local/bin:$PATH"
+export PATH="$HOME/.local/bin:$HOME/.hermes/bin:$HOME/.hermes/node/bin:$PATH"
 
 if ! command -v codex >/dev/null 2>&1; then
     echo "=== Installing OpenAI Codex ==="
     curl -fsSL https://chatgpt.com/codex/install.sh | sh
 else
     echo "=== OpenAI Codex is already installed ==="
+fi
+
+# The installer creates the launcher during the command above. Refresh PATH in
+# this process and fail here with a useful diagnostic if installation did not.
+export PATH="$HOME/.local/bin:$HOME/.hermes/bin:$HOME/.hermes/node/bin:$PATH"
+if ! command -v codex >/dev/null 2>&1; then
+    echo "Codex installed, but ~/.local/bin/codex is not available on PATH." >&2
+    exit 1
 fi
 
 if ! command -v grok >/dev/null 2>&1; then
@@ -52,7 +61,7 @@ else
     echo "=== Hermes Agent is already installed ==="
 fi
 
-export PATH="$HOME/.hermes/bin:$HOME/.hermes/node/bin:$HOME/.local/bin:$PATH"
+export PATH="$HOME/.local/bin:$HOME/.hermes/bin:$HOME/.hermes/node/bin:$PATH"
 for hermes_tool in hermes uv npm; do
     if ! command -v "$hermes_tool" >/dev/null 2>&1; then
         echo "Hermes installed, but $hermes_tool is not available on PATH." >&2
