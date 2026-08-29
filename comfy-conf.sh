@@ -192,6 +192,24 @@ fi
 echo "=== zsh and Powerlevel10k are ready ==="
 
 ###############################################################################
+# CODING AGENTS
+###############################################################################
+
+if ! command -v codex >/dev/null 2>&1; then
+    echo "=== Installing OpenAI Codex ==="
+    curl -fsSL https://chatgpt.com/codex/install.sh | sh
+else
+    echo "=== OpenAI Codex is already installed ==="
+fi
+
+if ! command -v grok >/dev/null 2>&1; then
+    echo "=== Installing Grok Build ==="
+    curl -fsSL https://x.ai/cli/install.sh | bash
+else
+    echo "=== Grok Build is already installed ==="
+fi
+
+###############################################################################
 # INTERACTIVE CONFIGURATION
 ###############################################################################
 
@@ -259,23 +277,6 @@ export PATH="/opt/rocm/bin:/opt/rocm/llvm/bin:$HOME/.local/bin:$PATH"
 export LD_LIBRARY_PATH="/opt/rocm/lib:/opt/rocm/lib64${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 export HSA_ENABLE_DXG_DETECTION=1
 
-###############################################################################
-# CODING AGENTS
-###############################################################################
-
-if ! command -v codex >/dev/null 2>&1; then
-    echo "=== Installing OpenAI Codex ==="
-    curl -fsSL https://chatgpt.com/codex/install.sh | sh
-else
-    echo "=== OpenAI Codex is already installed ==="
-fi
-
-if ! command -v grok >/dev/null 2>&1; then
-    echo "=== Installing Grok Build ==="
-    curl -fsSL https://x.ai/cli/install.sh | bash
-else
-    echo "=== Grok Build is already installed ==="
-fi
 
 ###############################################################################
 # ROCM + ROCDXG FOR RX 9070 XT ON WSL2
