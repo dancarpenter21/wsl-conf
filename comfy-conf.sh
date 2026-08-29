@@ -14,13 +14,6 @@ if [ "${ID:-}" != "ubuntu" ] || [ "${VERSION_ID:-}" != "24.04" ]; then
     exit 1
 fi
 
-if [ ! -e /dev/dxg ]; then
-    echo "/dev/dxg is missing." >&2
-    echo "Install an AMD Adrenalin driver with WSL2 ROCm support in Windows," >&2
-    echo "reboot Windows, run 'wsl --update', and try again." >&2
-    exit 1
-fi
-
 echo "=== Updating packages ==="
 sudo apt update
 sudo apt upgrade -y
@@ -140,6 +133,35 @@ sed -i \
     's/^plugins=(.*)/plugins=(git python zsh-autosuggestions zsh-syntax-highlighting)/' \
     "$HOME/.zshrc"
 
+# KEEP_ZSHRC preserves an existing file, which might not have come from Oh My
+# Zsh. Ensure the minimum required settings exist instead of assuming that it
+# contains the template entries matched above.
+grep -q '^ZSH=' "$HOME/.zshrc" || \
+    echo 'ZSH="$HOME/.oh-my-zsh"' >> "$HOME/.zshrc"
+grep -q '^ZSH_THEME=' "$HOME/.zshrc" || \
+    echo 'ZSH_THEME="powerlevel10k/powerlevel10k"' >> "$HOME/.zshrc"
+grep -q '^plugins=' "$HOME/.zshrc" || \
+    echo 'plugins=(git python zsh-autosuggestions zsh-syntax-highlighting)' >> "$HOME/.zshrc"
+
+if ! grep -Eq '^[[:space:]]*(source|\.)[[:space:]]+.*oh-my-zsh\.sh' "$HOME/.zshrc"; then
+    echo 'source "$ZSH/oh-my-zsh.sh"' >> "$HOME/.zshrc"
+fi
+
+###############################################################################
+# DEFAULT SHELL
+###############################################################################
+
+zsh_path="$(command -v zsh)"
+login_shell="$(getent passwd "$(id -un)" | cut -d: -f7)"
+
+if [ "$login_shell" != "$zsh_path" ]; then
+    echo "=== Setting zsh as default shell ==="
+    chsh -s "$zsh_path"
+fi
+
+echo "=== zsh and Powerlevel10k are ready ==="
+echo "Open a new WSL session to start zsh and the Powerlevel10k configurator."
+
 ###############################################################################
 # FZF
 ###############################################################################
@@ -190,8 +212,34 @@ export LD_LIBRARY_PATH="/opt/rocm/lib:/opt/rocm/lib64${LD_LIBRARY_PATH:+:$LD_LIB
 export HSA_ENABLE_DXG_DETECTION=1
 
 ###############################################################################
+# CODING AGENTS
+###############################################################################
+
+if ! command -v codex >/dev/null 2>&1; then
+    echo "=== Installing OpenAI Codex ==="
+    curl -fsSL https://chatgpt.com/codex/install.sh | sh
+else
+    echo "=== OpenAI Codex is already installed ==="
+fi
+
+if ! command -v grok >/dev/null 2>&1; then
+    echo "=== Installing Grok Build ==="
+    curl -fsSL https://x.ai/cli/install.sh | bash
+else
+    echo "=== Grok Build is already installed ==="
+fi
+
+###############################################################################
 # ROCM + ROCDXG FOR RX 9070 XT ON WSL2
 ###############################################################################
+
+if [ ! -e /dev/dxg ]; then
+    echo "/dev/dxg is missing." >&2
+    echo "zsh and Powerlevel10k were installed successfully, but the GPU setup" >&2
+    echo "cannot continue. Install an AMD Adrenalin driver with WSL2 ROCm support" >&2
+    echo "in Windows, reboot Windows, run 'wsl --update', and try again." >&2
+    exit 1
+fi
 
 ROCM_VERSION="7.2.4"
 ROCM_INSTALLER_VERSION="7.2.4.70204-1"
@@ -324,15 +372,6 @@ print("smoke-test checksum:", y.mean().item())
 PY
 
 ###############################################################################
-# DEFAULT SHELL
-###############################################################################
-
-if [ "$SHELL" != "$(command -v zsh)" ]; then
-    echo "=== Setting zsh as default shell ==="
-    chsh -s "$(command -v zsh)"
-fi
-
-###############################################################################
 # TMUX MOUSE
 ###############################################################################
 
@@ -363,6 +402,8 @@ echo "  ✓ ROCm $ROCM_VERSION"
 echo "  ✓ ROCDXG $ROCDXG_VERSION"
 echo "  ✓ PyTorch 2.9.1 for ROCm"
 echo "  ✓ Hermes Agent"
+echo "  ✓ OpenAI Codex"
+echo "  ✓ Grok Build"
 echo "  ✓ ComfyUI (RX 9070 XT)"
 echo
 echo "Next steps for WSL:"
