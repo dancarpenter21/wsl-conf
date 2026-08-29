@@ -14,6 +14,13 @@ bash comfy/03-rocm.sh
 Each stage is safe to rerun after a failure. Later stages check their important
 prerequisites and identify which earlier stage to run when one is missing.
 
+Once everything is run:
+  1. Restart WSL
+  2. Add models under: /home/danc/ComfyUI/models
+  3. Start ComfyUI with:
+     cd "/home/danc/ComfyUI" && .venv/bin/python main.py
+  4. Open: http://127.0.0.1:8188
+
 ## Stages
 
 ### 1. Base zsh
