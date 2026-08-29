@@ -83,6 +83,36 @@ if [ ! -d "$HOME/.oh-my-zsh" ]; then
 fi
 
 ###############################################################################
+# TMUX MOUSE
+###############################################################################
+
+touch "$HOME/.tmux.conf"
+grep -qxF 'set -g mouse on' "$HOME/.tmux.conf" || \
+    echo 'set -g mouse on' >> "$HOME/.tmux.conf"
+
+###############################################################################
+# HERMES AGENT
+###############################################################################
+
+if ! command -v hermes >/dev/null 2>&1; then
+    echo "=== Installing Hermes Agent (including uv and npm) ==="
+    curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
+else
+    echo "=== Hermes Agent is already installed ==="
+fi
+
+# The Hermes installer links its commands here, but a child installer cannot
+# update this script's environment. Make its bundled tools available now.
+export PATH="$HOME/.local/bin:$PATH"
+
+for hermes_tool in hermes uv npm; do
+    if ! command -v "$hermes_tool" >/dev/null 2>&1; then
+        echo "Hermes installed, but $hermes_tool is not available on PATH." >&2
+        exit 1
+    fi
+done
+
+###############################################################################
 # POWERLEVEL10K
 ###############################################################################
 
@@ -160,7 +190,25 @@ if [ "$login_shell" != "$zsh_path" ]; then
 fi
 
 echo "=== zsh and Powerlevel10k are ready ==="
-echo "Open a new WSL session to start zsh and the Powerlevel10k configurator."
+
+###############################################################################
+# INTERACTIVE CONFIGURATION
+###############################################################################
+
+if [ -t 0 ] && [ -t 1 ]; then
+    if [ ! -f "$HOME/.p10k.zsh" ]; then
+        echo "=== Configuring Powerlevel10k ==="
+        zsh -ic 'p10k configure'
+    else
+        echo "=== Powerlevel10k is already configured ==="
+    fi
+
+    echo "=== Configuring Hermes Agent ==="
+    hermes setup --quick
+else
+    echo "=== Skipping interactive Powerlevel10k and Hermes configuration ==="
+    echo "Run 'p10k configure' and 'hermes setup --quick' from a terminal."
+fi
 
 ###############################################################################
 # FZF
@@ -242,7 +290,11 @@ if [ ! -e /dev/dxg ]; then
 fi
 
 ROCM_VERSION="7.2.4"
-ROCM_INSTALLER_VERSION="7.2.4.70204-1"
+# The patch-versioned amdgpu-install package is the generic Linux installer and
+# does not provide the WSL use case. AMD publishes a separate Radeon/WSL
+# installer for the 7.2 release line.
+AMDGPU_INSTALL_RELEASE="7.2"
+AMDGPU_INSTALL_VERSION="7.2.70200-1"
 ROCDXG_VERSION="1.2.0"
 
 echo "=== Installing the ROCm $ROCM_VERSION package repository ==="
@@ -251,8 +303,10 @@ trap 'rm -rf -- "$ROCM_TMP_DIR"' EXIT
 
 curl -fL --retry 3 \
     --output "$ROCM_TMP_DIR/amdgpu-install.deb" \
-    "https://repo.radeon.com/amdgpu-install/$ROCM_VERSION/ubuntu/noble/amdgpu-install_${ROCM_INSTALLER_VERSION}_all.deb"
-sudo apt install -y "$ROCM_TMP_DIR/amdgpu-install.deb"
+    "https://repo.radeon.com/amdgpu-install/$AMDGPU_INSTALL_RELEASE/ubuntu/noble/amdgpu-install_${AMDGPU_INSTALL_VERSION}_all.deb"
+# A previous run may have installed the newer generic package before failing on
+# --usecase=wsl, so permit replacing it with the WSL-capable package.
+sudo apt install -y --allow-downgrades "$ROCM_TMP_DIR/amdgpu-install.deb"
 
 installed_rocm_version="$(dpkg-query -W -f='${Version}' rocm-core 2>/dev/null || true)"
 if [[ "$installed_rocm_version" != *"$ROCM_VERSION"* ]]; then
@@ -294,24 +348,6 @@ fi
 
 echo "$rocm_info" | grep -E 'Name:.*gfx1201|Marketing Name:.*9070 XT' || true
 
-###############################################################################
-# HERMES AGENT
-###############################################################################
-
-if ! command -v hermes >/dev/null 2>&1; then
-    echo "=== Installing Hermes Agent ==="
-    curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
-else
-    echo "=== Hermes Agent is already installed ==="
-fi
-
-if ! command -v uv >/dev/null 2>&1; then
-    echo "Hermes installed, but its uv executable is not on PATH." >&2
-    echo "Open a new shell and run this script again." >&2
-    exit 1
-fi
-
-###############################################################################
 # COMFYUI
 ###############################################################################
 
@@ -371,15 +407,6 @@ y = x @ x
 print("smoke-test checksum:", y.mean().item())
 PY
 
-###############################################################################
-# TMUX MOUSE
-###############################################################################
-
-touch "$HOME/.tmux.conf"
-grep -qxF 'set -g mouse on' "$HOME/.tmux.conf" || \
-    echo 'set -g mouse on' >> "$HOME/.tmux.conf"
-
-###############################################################################
 # SUMMARY
 ###############################################################################
 
@@ -410,10 +437,9 @@ echo "Next steps for WSL:"
 echo "  1. Configure Windows Terminal to use MesloLGS NF"
 echo "  2. Restart WSL"
 echo "Then for WSL or Linux:"
-echo "  1. Run: p10k configure"
-echo "  2. Run: hermes"
-echo "  3. Add models under: $COMFYUI_DIR/models"
-echo "  4. Start ComfyUI with:"
+echo "  1. Run: hermes"
+echo "  2. Add models under: $COMFYUI_DIR/models"
+echo "  3. Start ComfyUI with:"
 echo "     cd \"$COMFYUI_DIR\" && .venv/bin/python main.py"
-echo "  5. Open: http://127.0.0.1:8188"
+echo "  4. Open: http://127.0.0.1:8188"
 echo
